@@ -1,0 +1,6 @@
+*.duckdb
+*.duckdb.wal
+sources/
+alertes.log
+.etat_sources.json
+__pycache__/
