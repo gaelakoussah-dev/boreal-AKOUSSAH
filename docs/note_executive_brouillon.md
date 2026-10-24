@@ -2,7 +2,7 @@
 
 **À : Camille Roux, directrice technique · De : MarketSense · Objet : où le portefeuille gagne ou perd de l'argent**
 
-Boréal Assurances compte 20 213 contrats exploitables et 1 957 sinistres retenus entre 2020 et juin 2025. Sur cette période, le ratio sinistres/primes est de 59 % (plausible entre 43 % et 87 %). Tous les chiffres viennent de l'entrepôt unique mis en place pour cette mission.
+Boréal Assurances compte 20 213 contrats exploitables et 1 957 sinistres retenus entre 2020 et juin 2025. Sur cette période, le ratio sinistres/primes est de 59 % (plausible entre 43 % et 86 %). Tous les chiffres viennent de l'entrepôt unique mis en place pour cette mission.
 
 ## Trois constats
 

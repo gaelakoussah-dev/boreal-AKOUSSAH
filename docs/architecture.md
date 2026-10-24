@@ -7,10 +7,10 @@ flowchart LR
     S3[sinistres/sinistres.jsonl] --> B
     S4[reglements/reglements_AAAA_MM.csv x64] --> B
     S5[antifraude/audits.csv] --> B
-    B[(brut\ncopie fidèle + fichier + date)] --> P[prep\ntypage + 42 règles]
+    B[(brut\ncopie fidèle + fichier + date)] --> P[prep\ntypage + 24 règles]
     P --> Q[(quarantaine\nlignes écartées + motif)]
     P --> C[(coeur\nétoile + exposition)]
-    C --> T{tests\n22 bloquants}
+    C --> T{tests\n10 bloquants}
     T -->|ok| M[(mart\ntables du dashboard)]
     M --> D[dashboard Streamlit]
     L[lancer.py + surveiller.py] -.orchestre.-> B
@@ -31,7 +31,7 @@ flowchart LR
 - Brut : un fichier déjà chargé (même nom et même empreinte MD5) est ignoré. Un fichier modifié remplace ses lignes (`DELETE` puis `INSERT` dans une transaction), il n'est jamais ajouté deux fois.
 - Cœur : insertion `WHERE NOT EXISTS` sur la clé, plus clés primaires. L'exposition, dérivée de la dimension contrat, est recalculée.
 - Quarantaine, prep et marts : reconstruits à chaque lancement à partir de ce qui est en dessous.
-- Le même mois livré sous un autre nom ajoute ses lignes dans le brut mais elles partent en quarantaine (règle R02) : le cœur ne bouge pas. Preuve : `test_rejeu.py`.
+- Le même mois livré sous un autre nom ajoute ses lignes dans le brut mais elles partent en quarantaine (règle R01) : le cœur ne bouge pas. Preuve : `test_rejeu.py`.
 
 ## Planification mensuelle
 

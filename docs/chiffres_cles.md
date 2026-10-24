@@ -5,8 +5,8 @@ Généré par `outils/exporter_docs.py`. Tous les chiffres viennent des tables `
 ## Portefeuille, toute la période
 - Exposition : 45 166 années-police ; primes acquises : 19 979 938 € ; sinistres retenus : 1 957.
 - Fréquence : 4,33 % (IC 95 % : 4,14 % à 4,53 %).
-- Coût moyen : 6 005 € (IC 95 % : 4 439 € à 8 877 €). Médiane : 1 997 €.
-- Ratio sinistres/primes : 58,8 % (IC 95 % : 43,0 % à 86,8 %). Ratio sur les seuls règlements payés : 56,2 %.
+- Coût moyen : 6 005 € (IC 95 % : 4 407 € à 8 809 €). Médiane : 1 997 €.
+- Ratio sinistres/primes : 58,8 % (IC 95 % : 42,6 % à 85,9 %). Ratio sur les seuls règlements payés : 56,2 %.
 - Les 1 % de sinistres les plus chers pèsent 34 % du coût total ; les 10 %, 61 %.
 
 ## Évolution annuelle du ratio
@@ -46,4 +46,4 @@ Généré par `outils/exporter_docs.py`. Tous les chiffres viennent des tables `
 ## Qualité des données
 - Clients : 200 doublons fusionnés sur 15 200 lignes (1,32 %), tous avec des attributs concordants.
 - Lignes en quarantaine : contrats 51, sinistres 5, règlements 33, audits 0.
-- Tests : 22 sur 22 réussis.
+- Tests : 10 sur 10 réussis.

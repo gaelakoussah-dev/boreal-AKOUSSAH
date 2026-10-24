@@ -23,9 +23,9 @@ Variables d'environnement facultatives : `BOREAL_SOURCES` (dossier des sources, 
 |---|---|
 | `commun.py` | connexion, date d'extraction (30/06/2025), fonctions SQL de conversion |
 | `ingestion.py` | sources → schéma `brut`, journal d'ingestion, rechargement d'un mois (`--recharger`) |
-| `prep.py` | typage, 42 règles de qualité, quarantaine avec motif |
+| `prep.py` | typage, 24 règles de qualité, quarantaine avec motif |
 | `coeur.py` | déduplication des clients, schéma en étoile, exposition |
-| `tests.py` | 22 tests bloquants, résultats dans `mart.resultats_tests` |
+| `tests.py` | 10 tests bloquants, résultats dans `mart.resultats_tests` |
 | `marts.py` | table du dashboard (`mart.portefeuille_mensuel`), tables d'exploitation, réconciliation mart/cœur |
 | `analyses_techniques.py` | indicateurs, décomposition du ratio, intervalles de confiance, tests, queue des coûts (livrable 3) |
 | `analyses_clients.py` | rétention, valeur client, délais, audits (livrable 4) |

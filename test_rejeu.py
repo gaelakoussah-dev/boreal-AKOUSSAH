@@ -57,7 +57,7 @@ def main():
     rejouer(con, racine)
     resultats.append(comparer("3. meme mois livre une deuxieme fois sous un autre nom", ref, photo(con),
                               {"brut.reglements": nb, "quarantaine.reglements": nb}))
-    print(f"   -> les {nb} lignes en double sont en brut et en quarantaine (motif R02), le coeur ne bouge pas")
+    print(f"   -> les {nb} lignes en double sont en brut et en quarantaine (motif R01), le coeur ne bouge pas")
 
     con.execute("INSERT INTO coeur.fact_reglement VALUES ('999999', 'inexistant', DATE '2024-01-01', 10)")
     echecs = tests.executer(con)

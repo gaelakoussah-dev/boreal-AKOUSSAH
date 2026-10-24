@@ -7,9 +7,9 @@ Chaque chiffre cité doit renvoyer à une table ou à une requête. `docs/chiffr
 | 1. Contexte et démarche | 1 | mission, sources, périmètre | `README.md` |
 | 2. Architecture (L1) | 3 | schéma, choix d'outils chiffrés, 100 fois plus de données | `docs/architecture.md` |
 | 3. Ingestion (L1) | 3 | formats et défauts entre fichiers (encodage, colonne déplacée), journal, rechargement, test de rejeu | `ingestion.py`, `brut.journal`, `test_rejeu.py` |
-| 4. Qualité (L2) | 4 | tableau des 42 règles avec requête, gravité, volume, traitement ; quarantaine ; impact des rejets | `docs/regles_qualite.md`, `prep.py` |
+| 4. Qualité (L2) | 4 | tableau des 24 règles avec requête, gravité, volume, traitement ; quarantaine ; impact des rejets | `docs/regles_qualite.md`, `prep.py` |
 | 5. Déduplication et modèle (L2) | 3 | clé, taux, règle de survie ; schéma en étoile et grain ; historique | `docs/architecture.md`, `coeur.py` |
-| 6. Tests (L2) | 1 | 22 tests, dont réconciliations | `tests.py`, `mart.resultats_tests` |
+| 6. Tests (L2) | 1 | 10 tests, dont réconciliations | `tests.py`, `mart.resultats_tests` |
 | 7. Indicateurs techniques (L3) | 3 | tableaux par produit, zone, formule, canal, âge, avec une phrase actionnable chacun | `mart.indicateurs_segments` |
 | 8. Décomposition (L3) | 2 | fréquence, coût, prime ; segments ; années incomplètes ; sinistre n° 1129 | `mart.decomposition_*`, `mart.ratio_plafonne*` |
 | 9. Rigueur statistique (L3) | 2 | intervalles, deux tests justifiés, queue des coûts | `mart.ic_indicateurs`, `mart.tests_stats`, `mart.queue_couts` |

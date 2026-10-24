@@ -11,7 +11,7 @@
 ## Questions probables et réponses
 
 **Que se passe-t-il si le fichier d'un mois est livré deux fois ?**
-Trois cas, tous testés dans `test_rejeu.py`. Même fichier, même contenu : l'empreinte MD5 est déjà dans `brut.journal`, il est ignoré. Rechargement forcé (`--recharger`) : les lignes du fichier sont supprimées puis réinsérées dans une transaction, l'état final est identique. Même contenu sous un autre nom : les lignes entrent dans le brut mais la règle R02 les met en quarantaine (même `paiement_id`), le cœur ne change pas. En plus, `fact_reglement` a une clé primaire sur `paiement_id`.
+Trois cas, tous testés dans `test_rejeu.py`. Même fichier, même contenu : l'empreinte MD5 est déjà dans `brut.journal`, il est ignoré. Rechargement forcé (`--recharger`) : les lignes du fichier sont supprimées puis réinsérées dans une transaction, l'état final est identique. Même contenu sous un autre nom : les lignes entrent dans le brut mais la règle R01 les met en quarantaine (même `paiement_id`), le cœur ne change pas. En plus, `fact_reglement` a une clé primaire sur `paiement_id`.
 
 **Comment prouvez-vous que l'entrepôt réconcilie avec les sources ?**
 Les tests `reconciliation_*` : lignes brutes = lignes du cœur + lignes en quarantaine, pour chaque source, et pour les règlements aussi en montants (même somme). Ensuite `marts.py` vérifie que exposition, primes, nombre de sinistres et règlements du mart sont identiques à ceux du cœur. C'est possible parce qu'aucune ligne n'est supprimée.

@@ -4,55 +4,43 @@ from commun import connexion
 
 # (nom, description, requete qui renvoie un nombre, valeur attendue)
 TESTS = [
-    ("unicite_client", "client_id unique dans dim_client",
-     "SELECT count(*) - count(DISTINCT client_id) FROM coeur.dim_client", 0),
-    ("unicite_contrat", "contrat_id unique dans dim_contrat",
-     "SELECT count(*) - count(DISTINCT contrat_id) FROM coeur.dim_contrat", 0),
-    ("unicite_sinistre", "sinistre_id unique dans fact_sinistre",
-     "SELECT count(*) - count(DISTINCT sinistre_id) FROM coeur.fact_sinistre", 0),
-    ("unicite_paiement", "paiement_id unique dans fact_reglement",
-     "SELECT count(*) - count(DISTINCT paiement_id) FROM coeur.fact_reglement", 0),
-    ("unicite_exposition", "un seul couple (contrat, annee) dans fact_exposition",
-     "SELECT count(*) - count(DISTINCT (contrat_id, annee)) FROM coeur.fact_exposition", 0),
-    ("integrite_contrat_client", "tout contrat pointe vers un client existant",
-     "SELECT count(*) FROM coeur.dim_contrat c WHERE NOT EXISTS (SELECT 1 FROM coeur.dim_client d WHERE d.client_id = c.client_id)", 0),
-    ("integrite_sinistre_contrat", "tout sinistre pointe vers un contrat existant",
-     "SELECT count(*) FROM coeur.fact_sinistre s WHERE NOT EXISTS (SELECT 1 FROM coeur.dim_contrat c WHERE c.contrat_id = s.contrat_id)", 0),
-    ("integrite_sinistre_garantie", "tout sinistre pointe vers une garantie existante",
-     "SELECT count(*) FROM coeur.fact_sinistre s WHERE NOT EXISTS (SELECT 1 FROM coeur.dim_garantie g WHERE g.garantie_id = s.garantie_id)", 0),
-    ("integrite_reglement_sinistre", "tout reglement pointe vers un sinistre existant",
-     "SELECT count(*) FROM coeur.fact_reglement r WHERE NOT EXISTS (SELECT 1 FROM coeur.fact_sinistre s WHERE s.sinistre_id = r.sinistre_id)", 0),
-    ("integrite_audit_sinistre", "tout audit pointe vers un sinistre existant",
-     "SELECT count(*) FROM coeur.fact_audit a WHERE NOT EXISTS (SELECT 1 FROM coeur.fact_sinistre s WHERE s.sinistre_id = a.sinistre_id)", 0),
-    ("integrite_exposition_contrat", "toute exposition pointe vers un contrat existant",
-     "SELECT count(*) FROM coeur.fact_exposition e WHERE NOT EXISTS (SELECT 1 FROM coeur.dim_contrat c WHERE c.contrat_id = e.contrat_id)", 0),
-    ("exposition_positive", "exposition strictement positive et au plus une annee",
+    ("unicite_cles", "clés uniques : client, contrat, sinistre, paiement, et couple (contrat, année) de l'exposition",
+     """SELECT (SELECT count(*) - count(DISTINCT client_id) FROM coeur.dim_client)
+            + (SELECT count(*) - count(DISTINCT contrat_id) FROM coeur.dim_contrat)
+            + (SELECT count(*) - count(DISTINCT sinistre_id) FROM coeur.fact_sinistre)
+            + (SELECT count(*) - count(DISTINCT paiement_id) FROM coeur.fact_reglement)
+            + (SELECT count(*) - count(DISTINCT (contrat_id, annee)) FROM coeur.fact_exposition)""", 0),
+    ("integrite_referentielle", "chaque clé étrangère pointe vers une ligne existante (contrat, sinistre, garantie, règlement, audit, exposition)",
+     """SELECT (SELECT count(*) FROM coeur.dim_contrat c WHERE NOT EXISTS (SELECT 1 FROM coeur.dim_client d WHERE d.client_id = c.client_id))
+            + (SELECT count(*) FROM coeur.fact_sinistre s WHERE NOT EXISTS (SELECT 1 FROM coeur.dim_contrat c WHERE c.contrat_id = s.contrat_id))
+            + (SELECT count(*) FROM coeur.fact_sinistre s WHERE NOT EXISTS (SELECT 1 FROM coeur.dim_garantie g WHERE g.garantie_id = s.garantie_id))
+            + (SELECT count(*) FROM coeur.fact_reglement r WHERE NOT EXISTS (SELECT 1 FROM coeur.fact_sinistre s WHERE s.sinistre_id = r.sinistre_id))
+            + (SELECT count(*) FROM coeur.fact_audit a WHERE NOT EXISTS (SELECT 1 FROM coeur.fact_sinistre s WHERE s.sinistre_id = a.sinistre_id))
+            + (SELECT count(*) FROM coeur.fact_exposition e WHERE NOT EXISTS (SELECT 1 FROM coeur.dim_contrat c WHERE c.contrat_id = e.contrat_id))""", 0),
+    ("exposition_positive", "exposition strictement positive et au plus une année",
      "SELECT count(*) FROM coeur.fact_exposition WHERE exposition <= 0 OR exposition > 366 / 365.25", 0),
-    ("exposition_totale", "exposition totale = jours de couverture cumules des contrats / 365,25",
+    ("exposition_totale", "exposition totale = jours de couverture cumulés des contrats / 365,25",
      """SELECT round(abs((SELECT sum(exposition) FROM coeur.fact_exposition) - (SELECT sum(
             least(coalesce(date_resiliation, DATE '2025-07-01'), DATE '2025-07-01') - date_effet) / 365.25
             FROM coeur.dim_contrat)), 6)""", 0),
-    ("reconciliation_reglements_lignes", "reglements : lignes brutes = lignes du coeur + quarantaine (doublons compris)",
+    ("reconciliation_reglements_lignes", "règlements : lignes brutes = lignes du cœur + quarantaine (doublons compris)",
      """SELECT (SELECT count(*) FROM brut.reglements) - (SELECT count(*) FROM coeur.fact_reglement)
             - (SELECT count(*) FROM quarantaine.reglements)""", 0),
-    ("reconciliation_reglements_montants", "reglements : montants bruts = montants du coeur + quarantaine",
+    ("reconciliation_reglements_montants", "règlements : montants bruts = montants du cœur + quarantaine",
      """SELECT round((SELECT sum(vers_nombre(montant)) FROM brut.reglements) - (SELECT sum(montant) FROM coeur.fact_reglement)
             - (SELECT coalesce(sum(montant), 0) FROM quarantaine.reglements), 2)""", 0),
-    ("reconciliation_sinistres", "sinistres : lignes brutes = coeur + quarantaine",
-     "SELECT (SELECT count(*) FROM brut.sinistres) - (SELECT count(*) FROM coeur.fact_sinistre) - (SELECT count(*) FROM quarantaine.sinistres)", 0),
-    ("reconciliation_contrats", "contrats : lignes brutes = coeur + quarantaine",
-     "SELECT (SELECT count(*) FROM brut.contrats) - (SELECT count(*) FROM coeur.dim_contrat) - (SELECT count(*) FROM quarantaine.contrats)", 0),
-    ("reconciliation_audits", "audits : lignes brutes = coeur + quarantaine",
-     "SELECT (SELECT count(*) FROM brut.audits) - (SELECT count(*) FROM coeur.fact_audit) - (SELECT count(*) FROM quarantaine.audits)", 0),
-    ("reconciliation_clients", "clients : lignes brutes = clients conserves + doublons fusionnes + quarantaine",
-     """SELECT (SELECT count(*) FROM brut.clients) - (SELECT count(*) - 1 FROM coeur.dim_client)
-            - (SELECT count(*) FROM coeur.correspondance_client WHERE client_id <> client_id_source)
-            - (SELECT count(*) FROM quarantaine.clients)""", 0),
+    ("reconciliation_autres_sources", "contrats, sinistres, audits, clients : lignes brutes = cœur + quarantaine (+ doublons fusionnés pour les clients)",
+     """SELECT abs((SELECT count(*) FROM brut.contrats) - (SELECT count(*) FROM coeur.dim_contrat) - (SELECT count(*) FROM quarantaine.contrats))
+            + abs((SELECT count(*) FROM brut.sinistres) - (SELECT count(*) FROM coeur.fact_sinistre) - (SELECT count(*) FROM quarantaine.sinistres))
+            + abs((SELECT count(*) FROM brut.audits) - (SELECT count(*) FROM coeur.fact_audit) - (SELECT count(*) FROM quarantaine.audits))
+            + abs((SELECT count(*) FROM brut.clients) - (SELECT count(*) - 1 FROM coeur.dim_client)
+                  - (SELECT count(*) FROM coeur.correspondance_client WHERE client_id <> client_id_source)
+                  - (SELECT count(*) FROM quarantaine.clients))""", 0),
     ("quarantaine_avec_motif", "toute ligne en quarantaine a un motif",
      """SELECT (SELECT count(*) FROM quarantaine.reglements WHERE motif IS NULL)
             + (SELECT count(*) FROM quarantaine.sinistres WHERE motif IS NULL)
             + (SELECT count(*) FROM quarantaine.contrats WHERE motif IS NULL)""", 0),
-    ("pas_de_donnee_future", "aucune date de paiement ou de survenance apres l'extraction",
+    ("pas_de_donnee_future", "aucune date de paiement ou de survenance après l'extraction",
      """SELECT (SELECT count(*) FROM coeur.fact_reglement WHERE date_paiement > DATE '2025-06-30')
             + (SELECT count(*) FROM coeur.fact_sinistre WHERE date_survenance > DATE '2025-06-30')""", 0),
     ("journal_sans_erreur", "aucun fichier en erreur dans le dernier chargement de chaque fichier",
