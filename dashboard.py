@@ -154,23 +154,6 @@ if page == "Portefeuille":
     st.caption("La charge de sinistres = règlements payés + réserves restantes sur les dossiers ouverts, rattachée au mois de survenance. "
                "Les mois récents peuvent encore évoluer (dossiers ouverts, déclarations tardives).")
 
-    st.subheader("Primes et charge par année")
-    y = requete(f"""
-        SELECT year(mois) AS annee, sum(prime_acquise) AS primes, sum(paye + reserve) AS charge
-        FROM mart.portefeuille_mensuel WHERE {clauses(False)} AND year(mois) BETWEEN {a0} AND {a1} GROUP BY 1 ORDER BY 1""")
-    y["annee"] = y["annee"].astype(str)
-    y["Résultat technique"] = y["primes"] - y["charge"]
-    long = y.melt("annee", ["primes", "charge"], "type", "montant")
-    long["type"] = long["type"].map({"primes": "Primes acquises", "charge": "Charge de sinistres"})
-    meilleure = y.loc[y["Résultat technique"].idxmax()]
-    graph = alt.Chart(long).mark_bar().encode(
-        x=alt.X("annee:N", title="Année"), xOffset="type:N", y=alt.Y("montant:Q", title="Montant (€)", axis=alt.Axis(format="~s")),
-        color=alt.Color("type:N", title="", scale=alt.Scale(domain=["Primes acquises", "Charge de sinistres"], range=[BLEU, ROUGE])),
-        tooltip=[alt.Tooltip("annee:N", title="Année"), alt.Tooltip("type:N", title=""), alt.Tooltip("montant:Q", title="Montant (€)", format=",.0f")])
-    st.altair_chart(graph.properties(title=f"Le résultat technique est le plus élevé en {meilleure['annee']} ({eur(meilleure['Résultat technique'])})",
-                                     height=300), width="stretch")
-    if str(annees[-1]) in y["annee"].values:
-        st.caption(f"{annees[-1]} ne couvre que les six premiers mois (données jusqu'à fin juin).")
 
 # ---------------------------------------------------------------------------------------- Technique et clients
 elif page == "Technique et clients":
@@ -251,12 +234,6 @@ elif page == "Technique et clients":
         r1 = ret[ret["annee_k"] == 1]["taux"].mean()
         st.altair_chart((carte + texte).properties(title=f"Environ {pct(r1, 0)} des contrats sont encore là après un an, quelle que soit la cohorte", height=260), width="stretch")
         st.caption("Seules les cases entièrement observables sont affichées : tous les contrats de la cohorte ont eu le temps d'atteindre l'anniversaire avant fin juin 2025.")
-    md = requete("SELECT * FROM mart.multidetention_part").iloc[0]
-    mr = requete("SELECT * FROM mart.multidetention_retention WHERE annee_k = 1")
-    st.markdown(f"**{pct(md['part_multi'], 0)}** des clients ({int(md['clients_multi']):,} sur {int(md['clients']):,}) détiennent à la fois auto et habitation.".replace(",", " "))
-    mr = mr.rename(columns={"definition": "Définition", "groupe": "Groupe", "nb_observables": "Contrats observés", "taux": "Rétention à 1 an", "ic_bas": "IC bas", "ic_haut": "IC haut"})
-    st.dataframe(mr[["Définition", "Groupe", "Contrats observés", "Rétention à 1 an", "IC bas", "IC haut"]].style.format(
-        {"Rétention à 1 an": f_pct, "IC bas": f_pct, "IC haut": f_pct, "Contrats observés": f_nb}), hide_index=True)
 
     st.subheader("Concentration de la valeur client")
     cr = requete("SELECT * FROM mart.concentration_resume").iloc[0]
@@ -269,24 +246,6 @@ elif page == "Technique et clients":
     st.altair_chart((ligne + diag).properties(
         title=f"Les 10 % de clients les plus rentables apportent {pct(cr['part_valeur_positive_top10'], 0)} de la valeur positive", height=300), width="stretch")
     st.markdown(f"{pct(cr['part_deficitaires'], 1)} des clients sont déficitaires (primes acquises inférieures aux sinistres payés) et cumulent {eur(abs(cr['perte_totale']))} de pertes.")
-    pr = requete("SELECT * FROM mart.profils_valeur ORDER BY valeur_moyenne DESC")
-    pr = pr.rename(columns={"groupe": "Groupe", "nb_clients": "Clients", "valeur_moyenne": "Valeur moyenne (€)", "primes_moyennes": "Primes (€)", "paye_moyen": "Sinistres payés (€)",
-                            "nb_contrats_moyen": "Contrats", "age_moyen": "Âge moyen", "part_multi": "Auto + habitation", "part_auto": "Détient auto",
-                            "part_habitation": "Détient habitation", "part_avec_sinistre_paye": "Avec sinistre payé"})
-    st.dataframe(pr.style.format({"Clients": f_nb, "Valeur moyenne (€)": f_nb, "Primes (€)": f_nb, "Sinistres payés (€)": f_nb,
-                                  "Contrats": lambda v: f_nb(v, 2), "Âge moyen": lambda v: f_nb(v, 1),
-                                  "Auto + habitation": lambda v: f_pct(v, 0), "Détient auto": lambda v: f_pct(v, 0),
-                                  "Détient habitation": lambda v: f_pct(v, 0), "Avec sinistre payé": lambda v: f_pct(v, 0)}), hide_index=True)
-
-    with st.expander("Audits antifraude : qui est audité, et avec quel résultat"):
-        ar = requete("SELECT * FROM mart.audits_resume").iloc[0]
-        st.markdown(f"**{int(ar['nb_audites'])} sinistres audités** sur {int(ar['nb_sinistres'])} ({pct(ar['taux_audit'])}). "
-                    f"Fraude confirmée pour **{int(ar['nb_fraudes_confirmees'])}** d'entre eux ({pct(ar['taux_confirmation_audites'])}). "
-                    "Ce taux ne vaut que pour les dossiers audités, choisis par le service antifraude, pas pour l'ensemble des sinistres.")
-        ac = requete("SELECT critere, modalite, nb_sinistres, nb_audites, taux_audit, nb_fraudes, taux_confirmation, ic_bas, ic_haut FROM mart.audits_criteres")
-        st.dataframe(ac.rename(columns={"critere": "Critère", "modalite": "Modalité", "nb_sinistres": "Sinistres", "nb_audites": "Audités", "taux_audit": "Taux d'audit",
-                                        "nb_fraudes": "Fraudes", "taux_confirmation": "Taux de confirmation", "ic_bas": "IC bas", "ic_haut": "IC haut"}).style.format(
-            {"Taux d'audit": f_pct, "Taux de confirmation": f_pct, "IC bas": f_pct, "IC haut": f_pct, "Sinistres": f_nb, "Audités": f_nb}), hide_index=True)
 
 # ---------------------------------------------------------------------------------------------- Exploitation
 elif page == "Exploitation":
@@ -377,5 +336,4 @@ else:
 
 **Valeur client** : primes acquises − sinistres payés, sur tous les contrats du client (après fusion des doublons).
 
-**Taux de confirmation de fraude** : fraudes confirmées ÷ dossiers audités. Ne s'applique qu'aux dossiers audités.
 """)
